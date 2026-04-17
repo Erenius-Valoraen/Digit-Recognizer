@@ -7,9 +7,6 @@ import cv2
 
 from model_architecture import CNN
 
-# ---------------------------
-# Load model
-# ---------------------------
 @st.cache_resource
 def load_model():
     model = CNN()
@@ -20,10 +17,8 @@ def load_model():
 
 model = load_model()
 
-# ---------------------------
-# UI
-# ---------------------------
-st.title("🧠 MNIST Digit Recognizer")
+
+st.title("MNIST Digit Recognizer")
 st.write("Draw a digit below:")
 
 canvas_result = st_canvas(
@@ -42,31 +37,26 @@ canvas_result = st_canvas(
 # ---------------------------
 if canvas_result.image_data is not None:
 
-    # Convert canvas → grayscale
+
     img = canvas_result.image_data[:, :, :3]
     img = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_RGB2GRAY)
 
-    # 🔥 SIMPLE FIX: only resize (no cropping, no centering, no tricks)
+
     img = cv2.resize(img, (28, 28), interpolation=cv2.INTER_AREA)
 
-    # Normalize to [0,1]
+
     img = img / 255.0
 
-    # Fix polarity (MNIST = white digit on black)
     if img.mean() > 0.5:
         img = 1 - img
 
-    # Convert to tensor
+
     img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
 
     # ---------------------------
-    # Show processed input
-    # ---------------------------
     st.image(img, caption="Model Input (28×28)", width=150, clamp=True)
 
-    # ---------------------------
-    # Predict
-    # ---------------------------
+
     with torch.no_grad():
         output = model(img_tensor)
         probs = F.softmax(output, dim=1)[0]
@@ -74,9 +64,6 @@ if canvas_result.image_data is not None:
     pred = probs.argmax().item()
     confidence = probs[pred].item()
 
-    # ---------------------------
-    # Output
-    # ---------------------------
     st.subheader(f"Prediction: {pred}")
     st.write(f"Confidence: {confidence:.4f}")
 
